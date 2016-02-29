@@ -10,6 +10,13 @@ module.exports = require('postcss').plugin('mdcss', function (opts) {
 	// set options object
 	opts = Object(opts);
 
+	// read variables
+	opts.variables = opts.variables || false;
+
+	if(typeof opts.variables === "string") {
+		opts.variables = JSON.parse(fs.readFileSync(opts.variables, {"encoding": "utf8"}));
+	}
+
 	// set theme
 	opts.theme = opts.theme || require('mdcss-theme-github');
 
@@ -32,6 +39,7 @@ module.exports = require('postcss').plugin('mdcss', function (opts) {
 
 	// return plugin
 	return function (css, result) {
+
 		// set current css directory or current directory
 		var dir = css.source.input.file ? path.dirname(css.source.input.file) : process.cwd();
 
@@ -103,8 +111,34 @@ module.exports = require('postcss').plugin('mdcss', function (opts) {
 
 					}
 				}
-
 				doc.content = marked(doc.content);
+				
+				if(opts.variables) {
+					/* Replacing scss vars with values
+							regex matching rule: $value;
+						 	(.*?):(\s*?)\$(.*?);
+
+						 	regex matching $variable: value;
+						 	(?!\b)\$(.*?):(\s*?)(.*?);
+
+							regex matching \s$Variable\s
+						 	(?!\b)\$(.*?)([\w\d]*?)(?=\s)
+					 */
+
+					var tempContent = doc.content;
+
+					var reg = /(?!\b)\$(.*?)([\w\d]*?)(?=[\s\;\:])/g;
+					tempContent = tempContent.replace(reg, function(match){
+						match = match.replace('$', '');
+						if(opts.variables[match]) {
+					    	return opts.variables[match];
+					    } else {
+					    	return 'undefined var:'+match;
+					    }
+					});
+
+					doc.content = tempContent;
+				}
 
 				// set documentation context
 				doc.context = comment;

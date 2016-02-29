@@ -110,6 +110,18 @@ grunt.initConfig({
 
 ## Options
 
+#### `variables`
+
+Type: `string || object || false`
+Default: `false`
+
+Used for Replacing variables in comment nodes (also imports).
+
+If false - feature turned off,
+If string - path to load json with sass variables,
+If object - object with sass variables
+
+
 #### `theme`
 
 Type: `NPM Repository`  
